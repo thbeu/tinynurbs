@@ -378,9 +378,9 @@ template <typename T> glm::vec<3, T> surfacePoint(const RationalSurface<T> &srf,
     // Compute homogenous coordinates of control points
     array2<tvecnp1> Cw;
     Cw.resize(srf.control_points.rows(), srf.control_points.cols());
-    for (int i = 0; i < srf.control_points.rows(); i++)
+    for (size_t i = 0; i < srf.control_points.rows(); i++)
     {
-        for (int j = 0; j < srf.control_points.cols(); j++)
+        for (size_t j = 0; j < srf.control_points.cols(); j++)
         {
             Cw(i, j) =
                 tvecnp1(util::cartesianToHomogenous(srf.control_points(i, j), srf.weights(i, j)));
