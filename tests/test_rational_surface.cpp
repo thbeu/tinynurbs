@@ -216,6 +216,63 @@ TEST_CASE("surfaceSplitV (rational)", "[surface, rational, modify]")
     REQUIRE(pt1.z == Approx(pt2.z));
 }
 
+TEST_CASE("surfaceSplitV (rational, interior split)", "[surface, rational, modify]")
+{
+    // The hemisphere is a Bezier in both directions (knots {0,0,0,0,1,1,1,1}),
+    // but splitting at v = 0.5 (not a knot) forces full knot insertion of
+    // multiplicity 3 before partitioning, exercising the non-degenerate path
+    // of surfaceSplit along the v-direction (column partitioning).
+    auto srf = getHemisphere();
+    float v = 0.5f;
+    tinynurbs::RationalSurface3f left, right;
+    std::tie(left, right) = tinynurbs::surfaceSplitV(srf, v);
+
+    REQUIRE(tinynurbs::surfaceIsValid(left) == true);
+    REQUIRE(tinynurbs::surfaceIsValid(right) == true);
+    REQUIRE(left.degree_u == srf.degree_u);
+    REQUIRE(right.degree_u == srf.degree_u);
+    REQUIRE(left.degree_v == srf.degree_v);
+    REQUIRE(right.degree_v == srf.degree_v);
+
+    // Knot-vector / control-point counts required by the validity relation.
+    // Splitting at a non-knot parameter inserts it to full degree multiplicity
+    // (r = degree), so the two pieces share one column: left + right = n + r + 1.
+    REQUIRE(left.knots_v.size() == (left.degree_v + 1) + (size_t)left.control_points.cols());
+    REQUIRE(right.knots_v.size() == (right.degree_v + 1) + (size_t)right.control_points.cols());
+    REQUIRE((size_t)left.control_points.cols() + (size_t)right.control_points.cols() ==
+            (size_t)srf.control_points.cols() + srf.degree_v + 1);
+    REQUIRE((size_t)left.control_points.rows() == (size_t)srf.control_points.rows());
+    REQUIRE((size_t)right.control_points.rows() == (size_t)srf.control_points.rows());
+
+    // Left half ends at v with degree+1 copies, right half starts there
+    for (int i = 0; i < left.degree_v + 1; ++i) {
+        int d = left.knots_v.size() - (left.degree_v + 1);
+        REQUIRE(left.knots_v[d + i] == Approx(v));
+    }
+    for (int i = 0; i < right.degree_v + 1; ++i) {
+        REQUIRE(right.knots_v[i] == Approx(v));
+    }
+
+    // Geometric preservation along a u-isocurve for both halves
+    const float u = 0.5f;
+    const std::vector<float> sample_left = {0.f, 0.25f, v};
+    for (float t : sample_left) {
+        glm::vec3 p_orig = tinynurbs::surfacePoint(srf, u, t);
+        glm::vec3 p_l = tinynurbs::surfacePoint(left, u, t);
+        REQUIRE(p_l.x == Approx(p_orig.x));
+        REQUIRE(p_l.y == Approx(p_orig.y));
+        REQUIRE(p_l.z == Approx(p_orig.z));
+    }
+    const std::vector<float> sample_right = {v, 0.75f, 1.f};
+    for (float t : sample_right) {
+        glm::vec3 p_orig = tinynurbs::surfacePoint(srf, u, t);
+        glm::vec3 p_r = tinynurbs::surfacePoint(right, u, t);
+        REQUIRE(p_r.x == Approx(p_orig.x));
+        REQUIRE(p_r.y == Approx(p_orig.y));
+        REQUIRE(p_r.z == Approx(p_orig.z));
+    }
+}
+
 TEST_CASE("surfaceReadOBJ and surfaceSaveOBJ (rational)", "[surface, obj]")
 {
     auto srf = getHemisphere();

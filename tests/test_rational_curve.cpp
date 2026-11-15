@@ -124,6 +124,50 @@ TEST_CASE("curveSplit (rational)", "[curve, rational, modify]")
     REQUIRE(pt1.z == Approx(pt2.z));
 }
 
+TEST_CASE("curveSplit (rational, interior knot)", "[curve, rational, modify]")
+{
+    // Split the unit circle (non-bezier, interior knots at pi/2, pi, 3pi/2)
+    // at u = pi/2, which is an existing knot of multiplicity 2.
+    auto crv = getCircle();
+    float u = glm::half_pi<float>();
+    tinynurbs::RationalCurve3f left, right;
+    std::tie(left, right) = tinynurbs::curveSplit(crv, u);
+
+    REQUIRE(tinynurbs::curveIsValid(left) == true);
+    REQUIRE(tinynurbs::curveIsValid(right) == true);
+    REQUIRE(left.degree == crv.degree);
+    REQUIRE(right.degree == crv.degree);
+
+    // Knot-vector and control-point/weight counts required by the validity relation
+    REQUIRE(left.knots.size() == (left.degree + 1) + left.control_points.size());
+    REQUIRE(right.knots.size() == (right.degree + 1) + right.control_points.size());
+    REQUIRE(left.weights.size() == left.control_points.size());
+    REQUIRE(right.weights.size() == right.control_points.size());
+
+    // Left half ends at u with degree+1 copies, right half starts there
+    for (int i = 0; i < left.degree + 1; ++i) {
+        int d = left.knots.size() - (left.degree + 1);
+        REQUIRE(left.knots[d + i] == Approx(u));
+    }
+    for (int i = 0; i < right.degree + 1; ++i) {
+        REQUIRE(right.knots[i] == Approx(u));
+    }
+
+    // Both halves must still trace the unit circle
+    REQUIRE(glm::length(tinynurbs::curvePoint(left, 0.f)) == Approx(1.f));
+    REQUIRE(glm::length(tinynurbs::curvePoint(left, 0.5f)) == Approx(1.f));
+    REQUIRE(glm::length(tinynurbs::curvePoint(right, 0.5f)) == Approx(1.f));
+    REQUIRE(glm::length(tinynurbs::curvePoint(right, glm::pi<float>())) == Approx(1.f));
+
+    // Continuity at the split: both halves meet at (0, 1, 0)
+    glm::vec3 pl = tinynurbs::curvePoint(left, u);
+    glm::vec3 pr = tinynurbs::curvePoint(right, u);
+    REQUIRE(pl.x == Approx(0.f));
+    REQUIRE(pl.y == Approx(1.f));
+    REQUIRE(pr.x == Approx(0.f));
+    REQUIRE(pr.y == Approx(1.f));
+}
+
 TEST_CASE("curveReadOBJ and curveSaveOBJ (rational)", "[curve, rational, obj]")
 {
     auto crv = getCircle();

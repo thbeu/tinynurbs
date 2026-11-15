@@ -203,6 +203,76 @@ TEST_CASE("surfaceSplitV (non-rational)", "[surface, non-rational, modify]")
     REQUIRE(pt1.z == Approx(pt2.z));
 }
 
+TEST_CASE("surfaceSplitU (non-rational, non-bezier)", "[surface, non-rational, modify]")
+{
+    // Surface with a cubic (degree 3) u-direction having one interior knot
+    // and a linear v-direction. 5x2 grid of control points.
+    tinynurbs::Surface3f srf;
+    srf.degree_u = 3;
+    srf.degree_v = 1;
+    srf.knots_u = {0, 0, 0, 0, 0.5f, 1, 1, 1, 1};
+    srf.knots_v = {0, 0, 1, 1};
+    srf.control_points = {5, 2,
+                          {glm::vec3(0, 0, 0),  glm::vec3(0, 0, -1),
+                           glm::vec3(1, 1, 0),  glm::vec3(1, 1, -1),
+                           glm::vec3(2, 0, 0),  glm::vec3(2, 0, -1),
+                           glm::vec3(3, 0, 0),  glm::vec3(3, 0, -1),
+                           glm::vec3(4, 0, 0),  glm::vec3(4, 0, -1)
+                          }
+                         };
+
+    // Split at u = 0.25, which is NOT an existing knot (forces full knot
+    // insertion before partitioning) in the cubic u-direction.
+    float u = 0.25f;
+    tinynurbs::Surface3f left, right;
+    std::tie(left, right) = tinynurbs::surfaceSplitU(srf, u);
+
+    REQUIRE(tinynurbs::surfaceIsValid(left) == true);
+    REQUIRE(tinynurbs::surfaceIsValid(right) == true);
+    REQUIRE(left.degree_u == srf.degree_u);
+    REQUIRE(right.degree_u == srf.degree_u);
+    REQUIRE(left.degree_v == srf.degree_v);
+    REQUIRE(right.degree_v == srf.degree_v);
+
+    // Knot-vector / control-point counts required by the validity relation.
+    // Splitting at a non-knot parameter inserts it to full degree multiplicity
+    // (r = degree), so the two pieces share one row: left + right = n + r + 1.
+    REQUIRE(left.knots_u.size() == (left.degree_u + 1) + (size_t)left.control_points.rows());
+    REQUIRE(right.knots_u.size() == (right.degree_u + 1) + (size_t)right.control_points.rows());
+    REQUIRE((size_t)left.control_points.rows() + (size_t)right.control_points.rows() ==
+            (size_t)srf.control_points.rows() + srf.degree_u + 1);
+    REQUIRE((size_t)left.control_points.cols() == (size_t)srf.control_points.cols());
+    REQUIRE((size_t)right.control_points.cols() == (size_t)srf.control_points.cols());
+
+    // Left half ends at u with degree+1 copies, right half starts there
+    for (int i = 0; i < left.degree_u + 1; ++i) {
+        int d = left.knots_u.size() - (left.degree_u + 1);
+        REQUIRE(left.knots_u[d + i] == Approx(u));
+    }
+    for (int i = 0; i < right.degree_u + 1; ++i) {
+        REQUIRE(right.knots_u[i] == Approx(u));
+    }
+
+    // Geometric preservation along a v-isocurve for both halves
+    const float v = 0.5f;
+    const std::vector<float> sample_left = {0.f, 0.1f, u};
+    for (float t : sample_left) {
+        glm::vec3 p_orig = tinynurbs::surfacePoint(srf, t, v);
+        glm::vec3 p_l = tinynurbs::surfacePoint(left, t, v);
+        REQUIRE(p_l.x == Approx(p_orig.x));
+        REQUIRE(p_l.y == Approx(p_orig.y));
+        REQUIRE(p_l.z == Approx(p_orig.z));
+    }
+    const std::vector<float> sample_right = {u, 0.75f, 1.f};
+    for (float t : sample_right) {
+        glm::vec3 p_orig = tinynurbs::surfacePoint(srf, t, v);
+        glm::vec3 p_r = tinynurbs::surfacePoint(right, t, v);
+        REQUIRE(p_r.x == Approx(p_orig.x));
+        REQUIRE(p_r.y == Approx(p_orig.y));
+        REQUIRE(p_r.z == Approx(p_orig.z));
+    }
+}
+
 TEST_CASE("surfaceReadOBJ and surfaceSaveOBJ (non-rational)", "[surface, non-rational, obj]")
 {
     auto srf = getBilinearPatch();

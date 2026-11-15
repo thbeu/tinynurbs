@@ -124,6 +124,57 @@ TEST_CASE("curveSplit (non-rational)", "[curve, non-rational, modify]")
     REQUIRE(pt1.y == Approx(pt2.y));
 }
 
+TEST_CASE("curveSplit (non-rational, non-bezier)", "[curve, non-rational, modify]")
+{
+    // Non-bezier curve: degree 2 with a single interior knot at 0.5
+    tinynurbs::Curve3f crv;
+    crv.control_points = {glm::vec3(0, 0, 0),
+                          glm::vec3(1, 1, 0),
+                          glm::vec3(2, 0, 0),
+                          glm::vec3(3, 0, 0)};
+    crv.knots = {0, 0, 0, 0.5f, 1, 1, 1};
+    crv.degree = 2;
+
+    float u = 0.25f;
+    tinynurbs::Curve3f left, right;
+    std::tie(left, right) = tinynurbs::curveSplit(crv, u);
+
+    REQUIRE(tinynurbs::curveIsValid(left) == true);
+    REQUIRE(tinynurbs::curveIsValid(right) == true);
+    REQUIRE(left.degree == crv.degree);
+    REQUIRE(right.degree == crv.degree);
+
+    // Knot-vector and control-point counts required by the validity relation
+    REQUIRE(left.knots.size() == (left.degree + 1) + left.control_points.size());
+    REQUIRE(right.knots.size() == (right.degree + 1) + right.control_points.size());
+
+    // Left half ends at u with degree+1 copies, right half starts there
+    for (int i = 0; i < left.degree + 1; ++i) {
+        int d = static_cast<int>(left.knots.size()) - (left.degree + 1);
+        REQUIRE(left.knots[d + i] == Approx(u));
+    }
+    for (int i = 0; i < right.degree + 1; ++i) {
+        REQUIRE(right.knots[i] == Approx(u));
+    }
+
+    // Geometric preservation: the left piece reproduces the original curve
+    // over [0, u], the right piece over [u, 1].
+    const std::vector<float> sample_left = {0.f, 0.1f, 0.2f, u};
+    for (float t : sample_left) {
+        glm::vec2 p_orig = tinynurbs::curvePoint(crv, t);
+        glm::vec2 p_l = tinynurbs::curvePoint(left, t);
+        REQUIRE(p_l.x == Approx(p_orig.x));
+        REQUIRE(p_l.y == Approx(p_orig.y));
+    }
+    const std::vector<float> sample_right = {u, 0.75f, 0.9f, 1.f};
+    for (float t : sample_right) {
+        glm::vec2 p_orig = tinynurbs::curvePoint(crv, t);
+        glm::vec2 p_r = tinynurbs::curvePoint(right, t);
+        REQUIRE(p_r.x == Approx(p_orig.x));
+        REQUIRE(p_r.y == Approx(p_orig.y));
+    }
+}
+
 TEST_CASE("curveReadOBJ and curveSaveOBJ (non-rational)", "[curve, non-rational, obj]")
 {
     auto crv = getNonrationalBezierCurve();
