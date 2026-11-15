@@ -73,7 +73,7 @@ void curveReadOBJ(std::istream &is, unsigned int &deg, std::vector<T> &knots,
                 ssline >> four_coords[index++];
             }
             ctrl_pts_buf.emplace_back(four_coords[0], four_coords[1], four_coords[2]);
-            weights_buf.push_back(four_coords[3]);
+            weights_buf.push_back(static_cast<T>(four_coords[3]));
         }
         else if (start == "cstype")
         {
@@ -113,7 +113,7 @@ void curveReadOBJ(std::istream &is, unsigned int &deg, std::vector<T> &knots,
                 }
                 else
                 {
-                    indices.push_back(std::stof(token));
+                    indices.push_back(static_cast<int>(std::stof(token)));
                 }
             }
             parsed.curv = true;
@@ -164,8 +164,8 @@ void curveReadOBJ(std::istream &is, unsigned int &deg, std::vector<T> &knots,
         throw std::runtime_error("'parm' line missing/incomplete in file");
     }
 
-    int num_knots = temp_knots.size();
-    int num_cp = num_knots - deg - 1;
+    size_t num_knots = temp_knots.size();
+    size_t num_cp = num_knots - deg - 1;
 
     ctrlPts.resize(num_cp);
     weights.resize(num_cp);
@@ -235,7 +235,7 @@ void surfaceReadOBJ(std::istream &is, unsigned int &deg_u, unsigned int &deg_v,
                 ssline >> four_coords[index++];
             }
             ctrl_pts_buf.emplace_back(four_coords[0], four_coords[1], four_coords[2]);
-            weights_buf.push_back(four_coords[3]);
+            weights_buf.push_back(static_cast<T>(four_coords[3]));
         }
         else if (start == "cstype")
         {
@@ -275,7 +275,7 @@ void surfaceReadOBJ(std::istream &is, unsigned int &deg_u, unsigned int &deg_v,
                 }
                 else
                 {
-                    indices.push_back(std::stof(token));
+                    indices.push_back(static_cast<int>(std::stof(token)));
                 }
             }
             parsed.surf = true;
@@ -342,10 +342,10 @@ void surfaceReadOBJ(std::istream &is, unsigned int &deg_u, unsigned int &deg_v,
         throw std::runtime_error("'parm' line missing/incomplete in file");
     }
 
-    int num_knots_u = temp_uknots.size();
-    int num_knots_v = temp_vknots.size();
-    int num_cp_u = num_knots_u - deg_u - 1;
-    int num_cp_v = num_knots_v - deg_v - 1;
+    size_t num_knots_u = temp_uknots.size();
+    size_t num_knots_v = temp_vknots.size();
+    size_t num_cp_u = num_knots_u - deg_u - 1;
+    size_t num_cp_v = num_knots_v - deg_v - 1;
 
     ctrlPts.resize(num_cp_u, num_cp_v);
     weights.resize(num_cp_u, num_cp_v);
@@ -387,8 +387,8 @@ void curveSaveOBJ(std::ostream &os, unsigned int degree, const std::vector<T> &k
              << weights[i] << endl;
     }
 
-    int n_knots = knots.size();
-    int n_cp = ctrlPts.size();
+    size_t n_knots = knots.size();
+    size_t n_cp = ctrlPts.size();
 
     if (!rational)
     {
@@ -445,11 +445,11 @@ void surfaceSaveOBJ(std::ostream &os, unsigned int deg_u, unsigned int deg_v,
         }
     }
 
-    int nknots_u = knots_u.size();
-    int nknots_v = knots_v.size();
+    size_t nknots_u = knots_u.size();
+    size_t nknots_v = knots_v.size();
 
-    int nCpU = ctrlPts.rows();
-    int nCpV = ctrlPts.cols();
+    size_t nCpU = ctrlPts.rows();
+    size_t nCpV = ctrlPts.cols();
 
     if (!rational)
     {

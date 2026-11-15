@@ -108,12 +108,12 @@ TEST_CASE("curveSplit (rational)", "[curve, rational, modify]")
     REQUIRE(left.degree == crv.degree);
     REQUIRE(right.degree == crv.degree);
 
-    for (int i = 0; i < left.degree + 1; ++i) {
-        int d = left.knots.size() - (left.degree + 1);
-        REQUIRE(left.knots[d+i] == Approx(u));
+    for (unsigned int i = 0; i < left.degree + 1; ++i) {
+        size_t d = left.knots.size() - (left.degree + 1);
+        REQUIRE(left.knots[d + i] == Approx(u));
     }
 
-    for (int i = 0; i < right.degree + 1; ++i) {
+    for (unsigned int i = 0; i < right.degree + 1; ++i) {
         REQUIRE(right.knots[i] == Approx(u));
     }
 
@@ -145,11 +145,11 @@ TEST_CASE("curveSplit (rational, interior knot)", "[curve, rational, modify]")
     REQUIRE(right.weights.size() == right.control_points.size());
 
     // Left half ends at u with degree+1 copies, right half starts there
-    for (int i = 0; i < left.degree + 1; ++i) {
-        int d = left.knots.size() - (left.degree + 1);
+    for (unsigned int i = 0; i < left.degree + 1; ++i) {
+        size_t d = left.knots.size() - (left.degree + 1);
         REQUIRE(left.knots[d + i] == Approx(u));
     }
-    for (int i = 0; i < right.degree + 1; ++i) {
+    for (unsigned int i = 0; i < right.degree + 1; ++i) {
         REQUIRE(right.knots[i] == Approx(u));
     }
 

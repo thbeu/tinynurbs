@@ -284,11 +284,11 @@ void curveSplit(unsigned int degree, const std::vector<T> &knots,
     }
 
     // Left: knots before the u block, then degree+1 copies of u
-    for (int i = 0; i <= last_u - degree; ++i)
+    for (int i = 0; i <= last_u - static_cast<int>(degree); ++i)
     {
         left_knots.push_back(tmp_knots[i]);
     }
-    for (int i = 0; i < degree + 1; ++i)
+    for (unsigned int i = 0; i < degree + 1; ++i)
     {
         left_knots.push_back(u);
     }
@@ -354,7 +354,7 @@ void surfaceSplit(unsigned int degree, const std::vector<T> &knots,
     {
         left_knots.push_back(tmp_knots[i]);
     }
-    for (int i = 0; i < degree + 1; ++i)
+    for (unsigned int i = 0; i < degree + 1; ++i)
     {
         left_knots.push_back(param);
     }
@@ -375,7 +375,7 @@ void surfaceSplit(unsigned int degree, const std::vector<T> &knots,
     {
         size_t ii = 0;
         left_control_points.resize(n_left, tmp_cp.cols());
-        for (unsigned int i = 0; i < n_left; ++i)
+        for (int i = 0; i < n_left; ++i)
         {
             for (int j = 0; j < tmp_cp.cols(); ++j)
             {
@@ -398,7 +398,7 @@ void surfaceSplit(unsigned int degree, const std::vector<T> &knots,
         left_control_points.resize(tmp_cp.rows(), n_left);
         for (int i = 0; i < tmp_cp.rows(); ++i)
         {
-            for (unsigned int j = 0; j < n_left; ++j)
+            for (int j = 0; j < n_left; ++j)
             {
                 left_control_points[ii++] = tmp_cp(i, j);
             }

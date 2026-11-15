@@ -147,12 +147,12 @@ TEST_CASE("surfaceSplitU (non-rational)", "[surface, non-rational, modify]")
     REQUIRE(left.degree_v == srf.degree_v);
     REQUIRE(right.degree_v == srf.degree_v);
 
-    for (int i = 0; i < left.degree_u + 1; ++i) {
-        int d = left.knots_u.size() - (left.degree_u + 1);
+    for (unsigned int i = 0; i < left.degree_u + 1; ++i) {
+        size_t d = left.knots_u.size() - (left.degree_u + 1);
         REQUIRE(left.knots_u[d+i] == Approx(u));
     }
 
-    for (int i = 0; i < right.degree_u + 1; ++i) {
+    for (unsigned int i = 0; i < right.degree_u + 1; ++i) {
         REQUIRE(right.knots_u[i] == Approx(u));
     }
 
@@ -184,12 +184,12 @@ TEST_CASE("surfaceSplitV (non-rational)", "[surface, non-rational, modify]")
     REQUIRE(left.degree_v == srf.degree_v);
     REQUIRE(right.degree_v == srf.degree_v);
 
-    for (int i = 0; i < left.degree_v + 1; ++i) {
-        int d = left.knots_v.size() - (left.degree_v + 1);
+    for (unsigned int i = 0; i < left.degree_v + 1; ++i) {
+        size_t d = left.knots_v.size() - (left.degree_v + 1);
         REQUIRE(left.knots_v[d+i] == Approx(v));
     }
 
-    for (int i = 0; i < right.degree_v + 1; ++i) {
+    for (unsigned int i = 0; i < right.degree_v + 1; ++i) {
         REQUIRE(right.knots_v[i] == Approx(v));
     }
 
@@ -245,11 +245,11 @@ TEST_CASE("surfaceSplitU (non-rational, non-bezier)", "[surface, non-rational, m
     REQUIRE((size_t)right.control_points.cols() == (size_t)srf.control_points.cols());
 
     // Left half ends at u with degree+1 copies, right half starts there
-    for (int i = 0; i < left.degree_u + 1; ++i) {
-        int d = left.knots_u.size() - (left.degree_u + 1);
+    for (unsigned int i = 0; i < left.degree_u + 1; ++i) {
+        size_t d = left.knots_u.size() - (left.degree_u + 1);
         REQUIRE(left.knots_u[d + i] == Approx(u));
     }
-    for (int i = 0; i < right.degree_u + 1; ++i) {
+    for (unsigned int i = 0; i < right.degree_u + 1; ++i) {
         REQUIRE(right.knots_u[i] == Approx(u));
     }
 

@@ -149,11 +149,11 @@ TEST_CASE("curveSplit (non-rational, non-bezier)", "[curve, non-rational, modify
     REQUIRE(right.knots.size() == (right.degree + 1) + right.control_points.size());
 
     // Left half ends at u with degree+1 copies, right half starts there
-    for (int i = 0; i < left.degree + 1; ++i) {
+    for (unsigned int i = 0; i < left.degree + 1; ++i) {
         int d = static_cast<int>(left.knots.size()) - (left.degree + 1);
         REQUIRE(left.knots[d + i] == Approx(u));
     }
-    for (int i = 0; i < right.degree + 1; ++i) {
+    for (unsigned int i = 0; i < right.degree + 1; ++i) {
         REQUIRE(right.knots[i] == Approx(u));
     }
 
