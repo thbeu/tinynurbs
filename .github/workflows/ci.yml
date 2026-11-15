@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: ${{ matrix.toolchain }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain:
+          - linux-gcc
+          - macos-clang
+          - windows-msvc
+        configuration:
+          - Release
+        include:
+          - toolchain: linux-gcc
+            os: ubuntu-latest
+            compiler: gcc
+          - toolchain: macos-clang
+            os: macos-latest
+            compiler: clang
+          - toolchain: windows-msvc
+            os: windows-latest
+            compiler: msvc
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 5
+          submodules: recursive
+      - name: Configure (${{ matrix.configuration }})
+        run: |
+          if [ "${{ matrix.toolchain }}" == "windows-msvc" ]; then
+            cmake -S . -B build -DTINYNURBS_USE_OWN_GLM=ON -DBUILD_TESTS=ON
+          else
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.configuration }} -DTINYNURBS_USE_OWN_GLM=ON -DBUILD_TESTS=ON
+          fi
+      - name: Build with ${{ matrix.compiler }}
+        run: |
+          if [ "${{ matrix.toolchain }}" == "windows-msvc" ]; then
+            cmake --build build --config ${{ matrix.configuration }}
+          else
+            cmake --build build
+          fi
+      - name: Test
+        run: ctest --no-tests=error --test-dir build --build-config ${{ matrix.configuration }}
